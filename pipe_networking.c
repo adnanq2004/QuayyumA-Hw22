@@ -15,6 +15,14 @@
 int server_setup() {
   int from_client = 0;
   return from_client;
+  int b = mkfifo(WKP, 0600);
+  if ( b == -1 ) {
+    printf("mkfifo error %d: %s\n", errno, strerror(errno));
+    exit(-1);
+  }
+  from_client = open(WKP, O_RDONLY);
+  remove(WKP);
+  return from_client;
 }
 
 /*=========================
@@ -27,6 +35,20 @@ int server_setup() {
   =========================*/
 int server_connect(int from_client) {
   int to_client  = 0;
+  return to_client;
+  char buffer[HANDSHAKE_BUFFER_SIZE];
+  int b = read(from_client, buffer, HANDSHAKE_BUFFER_SIZE);
+  to_client = open(buffer, O_WRONLY);
+  char ppname[HANDSHAKE_BUFFER_SIZE];
+  sprintf(ppname, "%d", getpid());
+  write(to_client, buffer, HANDSHAKE_BUFFER_SIZE);
+  read(from_client, buffer, HANDSHAKE_BUFFER_SIZE);
+  int num = atoi(buffer);
+  if (num != getpid()) {
+    printf("client: didn't received correct server's message: %s\n", buffer);
+    return 0;
+  }
+  printf("client: received correct server's message: %s\n", buffer);
   return to_client;
 }
 
