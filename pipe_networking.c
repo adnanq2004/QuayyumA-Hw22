@@ -20,8 +20,19 @@ int server_setup() {
     printf("mkfifo error %d: %s\n", errno, strerror(errno));
     exit(-1);
   }
-  from_client = open(WKP, O_RDONLY);
-  remove(WKP);
+  while (1) {
+    from_client = open(WKP, O_RDONLY);
+    char line[HANDSHAKE_BUFFER_SIZE];
+    read(from_client, line, HANDSHAKE_BUFFER_SIZE);
+    int child = fork();
+    if (!child) {
+      server_connect(from_client);
+    }
+    else {
+    }
+    // close(WKP);
+    remove(WKP);
+  }
   return from_client;
 }
 
